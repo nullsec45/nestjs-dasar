@@ -1,13 +1,14 @@
 import { Controller, Get } from "@nestjs/common";
 
-@Controller()
+// routing nya taru di decorator controller di mana dikelompokkan berdasarkan jalur routingnya
+@Controller("hero")
 export class HeroController {
-    @Get("hero/index")
+    @Get("index")
     index() {
         return "Hero index";
     }
 
-    @Get("hero/create")
+    @Get("create")
     create() {
         return "hero create";
     }
