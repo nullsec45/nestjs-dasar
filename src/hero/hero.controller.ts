@@ -1,4 +1,16 @@
-import { Controller, Get, HttpCode, Post, Req, Res, Header, Redirect } from "@nestjs/common";
+import {
+    Controller,
+    Get,
+    HttpCode,
+    Post,
+    Req,
+    Res,
+    Header,
+    Redirect,
+    Param,
+    Body
+} from "@nestjs/common";
+import { CreateHeroDto } from "./dto/create-hero.dto";
 
 let heroes = [
     {
@@ -38,6 +50,27 @@ export class HeroController {
         );
     }
 
+    // Untuk route/url yang terdapat parameternya, taruh di atas route yang statis
+    @Get("detail/:id")
+    show(@Param() params, @Res() response) {
+        let hero = heroes.find((hero) => hero.id == params.id);
+        console.log(hero);
+        if (hero == undefined) {
+            response.json(
+                {
+                    status: 404,
+                    message: "Hero Not Found"
+                }
+            );
+        }
+        response.json(
+            {
+                status: 200,
+                hero
+            }
+        );
+    }
+
     @Get("create")
     create(@Res({ passthrough: true }) res): string {
         res.cookie("name", "Fajar");
@@ -45,14 +78,10 @@ export class HeroController {
     }
 
     @Post("store")
-    store(@Req() request, @Res() response) {
+
+    store(@Req() request, @Res() response, @Body() createHeroDto: CreateHeroDto) {
         const { id, name, type, image } = request.body;
-        heroes.push({
-            id,
-            name,
-            type,
-            image
-        })
+        heroes.push(createHeroDto)
         response.status(200).json(heroes);
     }
 
