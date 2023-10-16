@@ -8,9 +8,11 @@ import {
     Header,
     Redirect,
     Param,
-    Body
+    Body,
+    Put
 } from "@nestjs/common";
 import { CreateHeroDto } from "./dto/create-hero.dto";
+import { UpdateHeroDto } from "./dto/update-hero.dto";
 
 let heroes = [
     {
@@ -54,7 +56,6 @@ export class HeroController {
     @Get("detail/:id")
     show(@Param() params, @Res() response) {
         let hero = heroes.find((hero) => hero.id == params.id);
-        console.log(hero);
         if (hero == undefined) {
             response.json(
                 {
@@ -78,13 +79,35 @@ export class HeroController {
     }
 
     @Post("store")
-
-    store(@Req() request, @Res() response, @Body() createHeroDto: CreateHeroDto) {
-        const { id, name, type, image } = request.body;
+    store(@Res() response, @Body() createHeroDto: CreateHeroDto) {
+        // const { id, name, type, image } = request.body;
         heroes.push(createHeroDto)
         response.status(200).json(heroes);
     }
 
+
+    @Put("/update/:id")
+    update(@Param("id") id: number, @Res() response, @Body() updateHeroDto: UpdateHeroDto) {
+        const hero = heroes.find((hero) => hero.id == id);
+        // console.log(hero.name);
+        // return;
+        if (hero == undefined) {
+            response.json(
+                {
+                    status: 404,
+                    message: "Hero Not Found"
+                }
+            );
+            return
+        }
+
+        hero.name = updateHeroDto.name;
+        hero.type = updateHeroDto.type;
+        hero.image = updateHeroDto.image;
+        // hero.status = updateHeroDto.status;
+
+        response.status(200).json(heroes);
+    }
     // Jika menggunakan passhthrough kita bisa mengirimkan data nya lewat body dan juga return data nya
     @Post("kirim")
     kirim(@Req() request, @Res({ passthrough: true }) response) {
@@ -93,9 +116,12 @@ export class HeroController {
         }
     }
 
+
     @Get("/welcome")
     @Redirect("https://docs.nestjs.com/", 301)
     hello() {
         return "Welcome";
     }
+
+
 }
