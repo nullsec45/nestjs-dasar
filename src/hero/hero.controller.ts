@@ -9,53 +9,33 @@ import {
     Redirect,
     Param,
     Body,
-    Put
+    Put,
+    Delete
 } from "@nestjs/common";
 import { CreateHeroDto } from "./dto/create-hero.dto";
 import { UpdateHeroDto } from "./dto/update-hero.dto";
+import { HeroService } from "./hero.service";
 
-let heroes = [
-    {
-        id: 1,
-        name: "Aurora",
-        type: "Mage",
-        image: "aurora.jpg"
-    },
-    {
-        id: 2,
-        name: "Zilong",
-        type: "Fighter",
-        image: "zilong.jpg"
-    },
-    {
-        id: 3,
-        name: "Akai",
-        type: "Tank",
-        image: "akai.jpg"
-    },
-    {
-        id: 4,
-        name: "Aurora",
-        type: "Mage",
-        image: "aurora.jpg"
-    }
-];
 // routing nya taru di decorator controller di mana dikelompokkan berdasarkan jalur routingnya
 @Controller("hero")
 export class HeroController {
+    constructor(private heroService: HeroService) {
+
+    }
+
     @Get("index")
     @HttpCode(200)
     @Header("Content-Type", "application/json")
     index(@Res() response) {
         response.json(
-            heroes
+            this.heroService.findAll()
         );
     }
 
     // Untuk route/url yang terdapat parameternya, taruh di atas route yang statis
     @Get("detail/:id")
     show(@Param() params, @Res() response) {
-        let hero = heroes.find((hero) => hero.id == params.id);
+        let hero = this.heroService.findById(params.id);
         if (hero == undefined) {
             response.json(
                 {
@@ -63,6 +43,7 @@ export class HeroController {
                     message: "Hero Not Found"
                 }
             );
+            return;
         }
         response.json(
             {
@@ -80,17 +61,20 @@ export class HeroController {
 
     @Post("store")
     store(@Res() response, @Body() createHeroDto: CreateHeroDto) {
-        // const { id, name, type, image } = request.body;
-        heroes.push(createHeroDto)
-        response.status(200).json(heroes);
+
+        try {
+            this.heroService.create(createHeroDto);
+            response.status(200).json(this.heroService.findAll());
+        } catch (error) {
+            response.status(500).json({ message: "error" });
+        }
     }
 
 
     @Put("/update/:id")
     update(@Param("id") id: number, @Res() response, @Body() updateHeroDto: UpdateHeroDto) {
-        const hero = heroes.find((hero) => hero.id == id);
-        // console.log(hero.name);
-        // return;
+        const hero = this.heroService.findById(id);
+
         if (hero == undefined) {
             response.json(
                 {
@@ -104,9 +88,16 @@ export class HeroController {
         hero.name = updateHeroDto.name;
         hero.type = updateHeroDto.type;
         hero.image = updateHeroDto.image;
-        // hero.status = updateHeroDto.status;
 
-        response.status(200).json(heroes);
+        response.status(200).json(this.heroService.findAll());
+    }
+
+    @Delete("destroy/:id")
+    destroy(@Param("id") id: number) {
+        const hero = this.heroService.delete(id);
+
+        return hero;
+
     }
     // Jika menggunakan passhthrough kita bisa mengirimkan data nya lewat body dan juga return data nya
     @Post("kirim")
