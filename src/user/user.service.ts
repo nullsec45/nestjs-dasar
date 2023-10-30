@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
@@ -9,6 +9,13 @@ export class UserService {
   constructor(private prisma: PrismaService) { }
 
   async register(createUserDto: CreateUserDto) {
+    const checkEmail = await this.findByEmail(createUserDto.email);
+
+    if (checkEmail) {
+      // return user;
+      throw new ConflictException("email duplicated");
+    }
+
     const newUser = await this.prisma.user.create({
       data: {
         ...createUserDto,
@@ -39,6 +46,17 @@ export class UserService {
       return user;
     }
     throw new NotFoundException("data user tidak ditemukan");
+
+  }
+
+  async findByEmail(email: string) {
+    const emailUser = await this.prisma.user.findUnique({
+      where: {
+        email,
+      }
+    })
+
+    return emailUser;
 
   }
 
